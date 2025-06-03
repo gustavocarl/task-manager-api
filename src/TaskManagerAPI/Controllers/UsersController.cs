@@ -20,7 +20,7 @@ namespace TaskManagerAPI.Controllers
             _userRepository = userRepository;
         }
 
-        // GET api/<UsersController>/5
+        // GET api/<UsersController>
         [HttpGet]
         public async Task<IActionResult> GetAllUsers(CancellationToken cancellationToken)
         {
@@ -39,8 +39,8 @@ namespace TaskManagerAPI.Controllers
             return Ok(result);
         }
 
-        // GET: api/<UsersController>
-        [HttpGet("id")]
+        // GET: api/<UsersController>/5
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetUserById(id, cancellationToken);
