@@ -59,7 +59,7 @@ public class UserRepository(ISqlConnectionFactory connectionFactory) : IUserRepo
         command.Parameters.AddWithValue("@userId", userId);
 
         SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync(cancellationToken))
         {
             user = new User()
             {
@@ -90,7 +90,7 @@ public class UserRepository(ISqlConnectionFactory connectionFactory) : IUserRepo
             command.Parameters.AddWithValue("@Email", user.Email);
             command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
             command.Parameters.AddWithValue("@Role", user.Role.ToString());
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync(cancellationToken);
 
             user = new User()
             {
@@ -130,7 +130,7 @@ public class UserRepository(ISqlConnectionFactory connectionFactory) : IUserRepo
         command.Parameters.AddWithValue("@Email", user.Email);
         command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
         command.Parameters.AddWithValue("@Role", user.Role.ToString());
-        await command.ExecuteNonQueryAsync();
+        await command.ExecuteNonQueryAsync(cancellationToken);
         await connection.CloseAsync();
 
         return user;
