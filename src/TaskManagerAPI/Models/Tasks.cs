@@ -12,7 +12,7 @@ public sealed class Tasks : Base
 
     public Status Status { get; set; } = Status.ToDo;
 
-    public DateTime? DueTime { get; set; }
+    public DateTime? DueTime { get; set; } = DateTime.UtcNow;
 
     public Guid UserId { get; set; }
 

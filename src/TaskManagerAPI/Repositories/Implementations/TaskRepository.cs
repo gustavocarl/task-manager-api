@@ -109,8 +109,8 @@ public class TaskRepository : ITaskRepository
         {
             command.Parameters.AddWithValue("@Title", task.Title);
             command.Parameters.AddWithValue("@Description", task.Description);
-            command.Parameters.AddWithValue("@Priority", task.Priority.ToString());
-            command.Parameters.AddWithValue("@Status", task.Status.ToString());
+            command.Parameters.AddWithValue("@Priority", task.Priority);
+            command.Parameters.AddWithValue("@Status", task.Status);
             command.Parameters.AddWithValue("@DueDate", task.DueTime);
             command.Parameters.AddWithValue("@UserId", task.UserId);
             command.Parameters.AddWithValue("@CreatedAt", task.CreatedAt);

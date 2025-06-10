@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using TaskManagerAPI.Dtos;
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Models.Enums;
@@ -9,7 +8,7 @@ using TaskManagerAPI.Repositories.Interfaces;
 
 namespace TaskManagerAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
@@ -31,7 +30,7 @@ namespace TaskManagerAPI.Controllers
 
             var result = user.Select(user => new UserResponseDto
             {
-                Id = user.Id,
+                Id = user!.Id,
                 Name = user.Name,
                 Email = user.Email,
                 Role = user.Role
