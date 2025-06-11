@@ -160,8 +160,8 @@ public class TaskRepository : ITaskRepository
         command.Parameters.AddWithValue("@UserId", task.UserId);
         command.Parameters.AddWithValue("@Title", task.Title);
         command.Parameters.AddWithValue("@Description", task.Description);
-        command.Parameters.AddWithValue("@Priority", task.Priority.ToString());
-        command.Parameters.AddWithValue("@Status", task.Status.ToString());
+        command.Parameters.AddWithValue("@Priority", task.Priority);
+        command.Parameters.AddWithValue("@Status", task.Status);
         command.Parameters.AddWithValue("@DueDate", task.DueTime);
         command.Parameters.AddWithValue("@UpdatedAt", task.UpdatedAt);
 
@@ -171,10 +171,10 @@ public class TaskRepository : ITaskRepository
         return task;
     }
 
-    public async Task<Tasks?> DeleteTask(Guid taskId, Guid userId, CancellationToken cancellationToken)
+    public async Task<Tasks?> DeleteTask(Guid userId, Guid taskId, CancellationToken cancellationToken)
     {
         const string query = "DELETE FROM Tasks " +
-            "WHERE Id = @Id AND UserId = @UserId";
+            "WHERE Id = @TaskId AND UserId = @UserId";
 
         var task = new Tasks();
 
@@ -183,7 +183,7 @@ public class TaskRepository : ITaskRepository
         await connection.OpenAsync(cancellationToken);
 
         using var command = new SqlCommand(query, connection);
-        command.Parameters.AddWithValue("@Id", taskId);
+        command.Parameters.AddWithValue("@TaskId", taskId);
         command.Parameters.AddWithValue("@UserId", userId);
 
         command.ExecuteNonQuery();

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using TaskManagerAPI.Dtos;
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Repositories.Interfaces;
@@ -91,15 +92,44 @@ namespace TaskManagerAPI.Controllers
         }
 
         // PUT api/<TasksController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPut("{userId}/task/{taskId}")]
+        public async Task<IActionResult> UpdateTask(Guid userId, Guid taskId, [FromBody] UpdateTaskDto taskDto, CancellationToken cancellationToken)
         {
+            var task = new Tasks
+            {
+                Id = taskId,
+                UserId = userId,
+                Title = taskDto.Title,
+                Description = taskDto.Description,
+                Priority = taskDto.Priority,
+                Status = taskDto.Status,
+                DueTime = taskDto.DueDate,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var updatedTask = await _taskRepository.UpdateTask(task, cancellationToken);
+
+            if (updatedTask == null)
+                return BadRequest();
+
+            return Ok(new TaskResponseDto
+            {
+                Title = task.Title,
+                Description = task.Description
+            });
+
         }
 
         // DELETE api/<TasksController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpDelete("{userId}/task/{taskId}")]
+        public async Task<IActionResult> DeleteTask(Guid userId, Guid taskId, CancellationToken cancellationToken)
         {
+            var remove = await _taskRepository.DeleteTask(userId, taskId, cancellationToken);
+
+            if (remove == null)
+                return BadRequest();
+
+            return NoContent();
         }
     }
 }
