@@ -18,7 +18,6 @@ builder.Services.AddScoped<ISqlConnectionFactory>(provider =>
     return new SqlConnectionFactory(connectionString);
 });
 
-
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 

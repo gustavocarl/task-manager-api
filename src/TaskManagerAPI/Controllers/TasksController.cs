@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using TaskManagerAPI.Dtos;
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Repositories.Interfaces;
@@ -65,7 +64,6 @@ namespace TaskManagerAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Post([FromBody] Tasks task, Guid userId, CancellationToken cancellationToken)
         {
-
             task = new Tasks
             {
                 Title = task.Title,
@@ -80,7 +78,6 @@ namespace TaskManagerAPI.Controllers
 
             if (result == null)
                 return BadRequest(result);
-
 
             var response = new TaskResponseDto
             {
@@ -117,7 +114,6 @@ namespace TaskManagerAPI.Controllers
                 Title = task.Title,
                 Description = task.Description
             });
-
         }
 
         // DELETE api/<TasksController>/5

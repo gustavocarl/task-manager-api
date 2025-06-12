@@ -1,5 +1,4 @@
 ﻿using Microsoft.Data.SqlClient;
-using System.Net.WebSockets;
 using TaskManagerAPI.Data.Interface;
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Repositories.Interfaces;
@@ -87,6 +86,9 @@ public class TaskRepository : ITaskRepository
                 UpdatedAt = DateTime.Parse(reader["UpdatedAt"].ToString()!)
             };
         }
+
+        await connection.CloseAsync();
+
         return task;
     }
 
@@ -131,7 +133,6 @@ public class TaskRepository : ITaskRepository
             };
 
             return task;
-
         }
         catch (Exception ex)
         {
@@ -140,7 +141,7 @@ public class TaskRepository : ITaskRepository
         }
         finally
         {
-            command.Dispose();
+            await connection.CloseAsync();
         }
     }
 
@@ -166,6 +167,7 @@ public class TaskRepository : ITaskRepository
         command.Parameters.AddWithValue("@UpdatedAt", task.UpdatedAt);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
+
         await connection.CloseAsync();
 
         return task;
@@ -186,7 +188,9 @@ public class TaskRepository : ITaskRepository
         command.Parameters.AddWithValue("@TaskId", taskId);
         command.Parameters.AddWithValue("@UserId", userId);
 
-        command.ExecuteNonQuery();
+        await command.ExecuteNonQueryAsync();
+
+        await connection.CloseAsync();
 
         return task;
     }

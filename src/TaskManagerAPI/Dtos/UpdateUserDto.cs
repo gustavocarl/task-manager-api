@@ -11,5 +11,4 @@ public class UpdateUserDto
     public string Password { get; set; } = string.Empty;
 
     public Role Role { get; set; }
-
 }

@@ -23,22 +23,29 @@ public class UserRepository(ISqlConnectionFactory connectionFactory) : IUserRepo
 
         using var command = new SqlCommand(query, connection);
 
-        SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync())
+        try
         {
-            var user = new User()
+            SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync())
             {
-                Id = Guid.Parse(reader["Id"].ToString()!),
-                Name = reader["Name"].ToString()!,
-                Email = reader["Email"].ToString()!,
-                PasswordHash = reader["PasswordHash"].ToString()!,
-                Role = (Role)Enum.Parse(typeof(Role), reader["Role"].ToString()!),
-                CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()!)
-            };
+                var user = new User()
+                {
+                    Id = Guid.Parse(reader["Id"].ToString()!),
+                    Name = reader["Name"].ToString()!,
+                    Email = reader["Email"].ToString()!,
+                    PasswordHash = reader["PasswordHash"].ToString()!,
+                    Role = (Role)Enum.Parse(typeof(Role), reader["Role"].ToString()!),
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()!)
+                };
 
-            userList.Add(user);
+                userList.Add(user);
+            }
         }
-        await connection.CloseAsync();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            throw;
+        }
 
         return userList;
     }
@@ -56,28 +63,40 @@ public class UserRepository(ISqlConnectionFactory connectionFactory) : IUserRepo
         await connection.OpenAsync(cancellationToken);
 
         using var command = new SqlCommand(query, connection);
-        command.Parameters.AddWithValue("@userId", userId);
-
-        SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
+        try
         {
-            user = new User()
+            command.Parameters.AddWithValue("@userId", userId);
+
+            SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
             {
-                Id = Guid.Parse(reader["Id"].ToString()!),
-                Name = reader["Name"].ToString()!,
-                Email = reader["Email"].ToString()!,
-                PasswordHash = reader["PasswordHash"].ToString()!,
-                Role = (Role)Enum.Parse(typeof(Role), reader["Role"].ToString()!),
-                CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()!)
-            };
+                user = new User()
+                {
+                    Id = Guid.Parse(reader["Id"].ToString()!),
+                    Name = reader["Name"].ToString()!,
+                    Email = reader["Email"].ToString()!,
+                    PasswordHash = reader["PasswordHash"].ToString()!,
+                    Role = (Role)Enum.Parse(typeof(Role), reader["Role"].ToString()!),
+                    CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()!)
+                };
+            }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            throw;
+        }
+
         return user;
     }
 
     public async Task<User?> CreateUser(User user, CancellationToken cancellationToken)
     {
-        const string query = "INSERT INTO Users ( Name, Email, PasswordHash, Role )" +
-            " VALUES ( @Name, @Email, @PasswordHash, @Role )";
+        var userId = Guid.NewGuid();
+        var createdAt = DateTime.UtcNow;
+
+        const string query = "INSERT INTO Users (Id, Name, Email, PasswordHash, Role, CreatedAt) " +
+                     "VALUES (@Id, @Name, @Email, @PasswordHash, @Role, @CreatedAt)";
 
         var connection = _connectionFactory.GetConnection();
 
@@ -86,31 +105,29 @@ public class UserRepository(ISqlConnectionFactory connectionFactory) : IUserRepo
         using var command = new SqlCommand(query, connection);
         try
         {
+            command.Parameters.AddWithValue("@Id", userId);
             command.Parameters.AddWithValue("@Name", user.Name);
             command.Parameters.AddWithValue("@Email", user.Email);
             command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
             command.Parameters.AddWithValue("@Role", user.Role.ToString());
+            command.Parameters.AddWithValue("@CreatedAt", createdAt);
+
             await command.ExecuteNonQueryAsync(cancellationToken);
 
-            user = new User()
+            return new User()
             {
-                Id = Guid.NewGuid(),
+                Id = userId,
                 Name = user.Name,
                 Email = user.Email,
                 PasswordHash = user.PasswordHash,
                 Role = user.Role,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = createdAt
             };
-            return user;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
             throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
         }
     }
 
@@ -125,32 +142,46 @@ public class UserRepository(ISqlConnectionFactory connectionFactory) : IUserRepo
         await connection.OpenAsync(cancellationToken);
 
         using var command = new SqlCommand(query, connection);
-        command.Parameters.AddWithValue("@Id", user.Id);
-        command.Parameters.AddWithValue("@Name", user.Name);
-        command.Parameters.AddWithValue("@Email", user.Email);
-        command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
-        command.Parameters.AddWithValue("@Role", user.Role.ToString());
-        await command.ExecuteNonQueryAsync(cancellationToken);
-        await connection.CloseAsync();
+
+        try
+        {
+            command.Parameters.AddWithValue("@Id", user.Id);
+            command.Parameters.AddWithValue("@Name", user.Name);
+            command.Parameters.AddWithValue("@Email", user.Email);
+            command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+            command.Parameters.AddWithValue("@Role", user.Role.ToString());
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred {ex.Message}");
+            throw;
+        }
 
         return user;
     }
 
     public async Task<User?> DeleteUser(Guid userId, CancellationToken cancellationToken)
     {
-        const string query = "DELETE FROM Users " +
-            "WHERE Id = @userId";
+        var user = await GetUserById(userId, cancellationToken);
+        if (user is null) return null;
 
-        var user = new User();
+        const string query = "DELETE FROM Users WHERE Id = @userId";
 
-        var connection = _connectionFactory.GetConnection();
-
+        await using var connection = _connectionFactory.GetConnection();
         await connection.OpenAsync(cancellationToken);
 
-        using var command = new SqlCommand(query, connection);
-
-        command.Parameters.AddWithValue("@userId", userId);
-        command.ExecuteNonQuery();
+        await using var command = new SqlCommand(query, connection);
+        try
+        {
+            command.Parameters.AddWithValue("@userId", userId);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            throw;
+        }
 
         return user;
     }

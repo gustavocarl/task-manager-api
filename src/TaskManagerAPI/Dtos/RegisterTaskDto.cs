@@ -1,6 +1,4 @@
-﻿using TaskManagerAPI.Models.Enums;
-
-namespace TaskManagerAPI.Dtos;
+﻿namespace TaskManagerAPI.Dtos;
 
 public record RegisterTaskDto
 {
